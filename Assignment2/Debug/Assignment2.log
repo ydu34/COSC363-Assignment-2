@@ -1,0 +1,21 @@
+﻿  RayTracer.cpp
+D:\UC\COSC363\Assignment2\Assignment2\SceneObject.h(26,20): warning C4305: 'initializing': truncation from 'double' to 'float'
+D:\UC\COSC363\Assignment2\Assignment2\SceneObject.h(27,20): warning C4305: 'initializing': truncation from 'double' to 'float'
+D:\UC\COSC363\Assignment2\Assignment2\SceneObject.h(28,20): warning C4305: 'initializing': truncation from 'double' to 'float'
+D:\UC\COSC363\Assignment2\Assignment2\RayTracer.cpp(59,16): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+D:\UC\COSC363\Assignment2\Assignment2\RayTracer.cpp(62,16): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+D:\UC\COSC363\Assignment2\Assignment2\RayTracer.cpp(90,17): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\UC\COSC363\Assignment2\Assignment2\RayTracer.cpp(91,17): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\UC\COSC363\Assignment2\Assignment2\RayTracer.cpp(283,39): warning C4305: 'argument': truncation from 'double' to 'float'
+D:\UC\COSC363\Assignment2\Assignment2\RayTracer.cpp(298,39): warning C4305: 'argument': truncation from 'double' to 'float'
+D:\UC\COSC363\Assignment2\Assignment2\RayTracer.cpp(305,41): warning C4305: 'argument': truncation from 'double' to 'float'
+D:\UC\COSC363\Assignment2\Assignment2\RayTracer.cpp(311,37): warning C4305: 'argument': truncation from 'double' to 'float'
+  Assignment2.vcxproj -> D:\UC\COSC363\Assignment2\Debug\Assignment2.exe
