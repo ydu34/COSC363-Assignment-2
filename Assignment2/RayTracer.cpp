@@ -44,9 +44,13 @@ TextureBMP texture;
 glm::vec3 trace(Ray ray, int step)
 {
 	glm::vec3 backgroundCol(1);						//Background colour = (1,1,1)
-	glm::vec3 lightPos(10, 40, -3);					//Light's position
+	glm::vec3 lightPos(40, 60, -150);					//Light's position
+    glm::vec3 lightPos2(-40, 60, -150);                  //Second light's position
 	glm::vec3 color(0);
 	SceneObject* obj;
+    float ambientTerm = 0.2;
+    float transparentRefractiveAmbientTerm = 0.2;
+
 
     ray.closestPt(sceneObjects);					//Compare the ray with all objects in the scene
     if(ray.index == -1) return backgroundCol;		//no intersection
@@ -96,9 +100,13 @@ glm::vec3 trace(Ray ray, int step)
 
     }
 
-	color = obj->lighting(lightPos, -ray.dir, ray.hit);						//Object's colour
-    
-    // adding shadows to the scene
+    glm::vec3 lighting = obj->lighting(lightPos, -ray.dir, ray.hit); // (Ambient + Diffuse1 + Specular1) of first light source
+    glm::vec3 lighting2 = obj->lighting(lightPos2, -ray.dir, ray.hit); // (Ambient + Diffuse1 + Specular1) of second light source
+ 
+    color = lighting + lighting2 - 0.2f * obj->getColor(); //Object's colour 
+
+
+    // first light source shadows
     glm::vec3 lightVec = lightPos - ray.hit;
     Ray shadowRay(ray.hit, lightVec);
     
@@ -108,12 +116,32 @@ glm::vec3 trace(Ray ray, int step)
     if(shadowRay.index > -1 && shadowRay.dist < lightDist) {
         // If the object that was intersected by is a transparent object
         if (sceneObjects[shadowRay.index]->isTransparent() || sceneObjects[shadowRay.index]->isRefractive()) {
-            color = 0.75f * obj->getColor();
+            color = color - lighting2 + obj->getColor() * transparentRefractiveAmbientTerm;
         }
         else {
-            color = 0.2f * obj->getColor();    //0.2 = ambient scale factor
+            color = color - lighting2 + obj->getColor() * ambientTerm;   //0.2 = ambient scale factor
         }
           
+    }
+
+
+
+    // second light source shadows
+    glm::vec3 lightVec2 = lightPos2 - ray.hit;
+    Ray shadowRay2(ray.hit, lightVec2);
+
+    shadowRay2.closestPt(sceneObjects);  //Find the closest point of intersection on the shadow ray
+
+    float lightDist2 = glm::length(lightVec2);
+    if (shadowRay2.index > -1 && shadowRay2.dist < lightDist2) {
+        // If the object that was intersected by is a transparent object
+        if (sceneObjects[shadowRay2.index]->isTransparent() || sceneObjects[shadowRay2.index]->isRefractive()) {
+            color = color - lighting + obj->getColor() * transparentRefractiveAmbientTerm;
+        }
+        else {
+            color = color - lighting + obj->getColor() * ambientTerm;    //0.2 = ambient scale factor
+        }
+
     }
     
     if (obj->isReflective() && step < MAX_STEPS) {
@@ -224,6 +252,9 @@ void display()
     glFlush();
 }
 
+void drawCube2(glm::vec3 centre, glm::vec3 dimensions, glm::vec3 color) {
+
+}
 
 
 //---Draw Cube---
@@ -245,8 +276,10 @@ void drawCube(glm::vec3 centre, glm::vec3 dimensions, glm::vec3 color)
     Plane* PlaneTop = new Plane(vertFrontTopLeft, vertFrontTopRight, vertBackTopRight, vertBackTopLeft);
     Plane* PlaneLeft = new Plane(vertBackBotLeft, vertFrontBotLeft, vertFrontTopLeft, vertBackTopLeft);
     Plane* PlaneRight = new Plane(vertFrontBotRight, vertBackBotRight, vertBackTopRight, vertFrontTopRight);
-    Plane* PlaneBack = new Plane(vertBackBotLeft, vertBackBotRight, vertBackTopRight, vertBackTopLeft);
+    Plane* PlaneBack = new Plane(vertBackBotLeft, vertBackTopLeft, vertBackTopRight, vertBackBotRight);
     Plane* PlaneBot = new Plane(vertBackBotLeft, vertBackBotRight, vertFrontBotRight, vertFrontBotLeft);
+
+  
 
     PlaneFront->setColor(color);
     PlaneTop->setColor(color);
@@ -315,7 +348,7 @@ void initialize()
     cone1->setReflectivity(true, 0.8);
     sceneObjects.push_back(cone1);
 
-    drawCube(glm::vec3(-14, -11.0, -80.0), glm::vec3(4.0), glm::vec3(0, 0.5, 1));
+    drawCube(glm::vec3(-13, -12.0, -90.0), glm::vec3(6.0), glm::vec3(0, 0.5, 1));
 
     
     
