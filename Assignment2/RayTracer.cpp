@@ -44,12 +44,12 @@ TextureBMP texture;
 glm::vec3 trace(Ray ray, int step)
 {
 	glm::vec3 backgroundCol(1);						//Background colour = (1,1,1)
-	glm::vec3 lightPos(40, 60, -150);					//Light's position
-    glm::vec3 lightPos2(-40, 60, -150);                  //Second light's position
+	glm::vec3 lightPos(10, 16, -5);					//Light's position
+    glm::vec3 lightPos2(20, 18, 0);                  //Second light's position
 	glm::vec3 color(0);
 	SceneObject* obj;
     float ambientTerm = 0.2;
-    float transparentRefractiveAmbientTerm = 0.2;
+    float transparentRefractiveAmbientTerm = 0.7;
 
 
     ray.closestPt(sceneObjects);					//Compare the ray with all objects in the scene
@@ -69,41 +69,30 @@ glm::vec3 trace(Ray ray, int step)
         //2 colors
         if (ray.hit.x < 0) {
             if (k == j) color = glm::vec3(1, 1, 1);
-            else color = glm::vec3(0, 0, 0);
+            else color = glm::vec3(0.4 , 0.4, 0.4);
         }
         else {
-            if (k == j) color = glm::vec3(0, 0, 0);
+            if (k == j) color = glm::vec3(0.4, 0.4 , 0.4);
             else color = glm::vec3(1, 1, 1);
         }
     
         obj->setColor(color);
-        
-        //Add code for texture mapping here 
- /*       float x1 = -15, x2 = 5, z1 = -60, z2 = -90;
-        float texcoords = (ray.hit.x - x1)/(x2 - x1);
-        float texcoordt = (ray.hit.z - z1)/(z2 - z1);
-        if (texcoords > 0 && texcoords < 1 && 
-        texcoordt > 0 && texcoordt < 1) {
-            color=texture.getColorAt(texcoords, texcoordt);
-            obj->setColor(color);
-        }*/
+    
     }
 
     if (ray.index == 2) {
         glm::vec3 d = glm::normalize(ray.hit - ((Sphere*)obj)->getCenter());
-        float u = 0.5 + atan2(d.x, d.z) / (2 * M_PI);
-        float v = 0.5 - asin(d.y) / M_PI;
-        if (u > 0 && u < 1 && v > 0 && v < 1) {
-            color = texture.getColorAt(u, v);
-            obj->setColor(color);
-        }
-
+        float u = 0.5 + (atan2(d.x, d.z) / (2 * M_PI));
+        float v = 0.5 + (asin(d.y) / M_PI);
+        color = texture.getColorAt(u, v);
+        obj->setColor(color);
     }
+    color = obj->getColor();
 
-    glm::vec3 lighting = obj->lighting(lightPos, -ray.dir, ray.hit); // (Ambient + Diffuse1 + Specular1) of first light source
-    glm::vec3 lighting2 = obj->lighting(lightPos2, -ray.dir, ray.hit); // (Ambient + Diffuse1 + Specular1) of second light source
+    glm::vec3 lighting = obj->lighting(lightPos, -ray.dir, ray.hit); // (Diffuse1 + Specular1) of first light source
+    glm::vec3 lighting2 = obj->lighting(lightPos2, -ray.dir, ray.hit); // (Diffuse2 + Specular2) of second light source
  
-    color = lighting + lighting2 - 0.2f * obj->getColor(); //Object's colour 
+    color = lighting + lighting2;
 
 
     // first light source shadows
@@ -113,18 +102,6 @@ glm::vec3 trace(Ray ray, int step)
     shadowRay.closestPt(sceneObjects);  //Find the closest point of intersection on the shadow ray
     
     float lightDist = glm::length(lightVec);
-    if(shadowRay.index > -1 && shadowRay.dist < lightDist) {
-        // If the object that was intersected by is a transparent object
-        if (sceneObjects[shadowRay.index]->isTransparent() || sceneObjects[shadowRay.index]->isRefractive()) {
-            color = color - lighting2 + obj->getColor() * transparentRefractiveAmbientTerm;
-        }
-        else {
-            color = color - lighting2 + obj->getColor() * ambientTerm;   //0.2 = ambient scale factor
-        }
-          
-    }
-
-
 
     // second light source shadows
     glm::vec3 lightVec2 = lightPos2 - ray.hit;
@@ -133,15 +110,37 @@ glm::vec3 trace(Ray ray, int step)
     shadowRay2.closestPt(sceneObjects);  //Find the closest point of intersection on the shadow ray
 
     float lightDist2 = glm::length(lightVec2);
+
+    bool transparentOrRefractive = false;
+
+    if(shadowRay.index > -1 && shadowRay.dist < lightDist) {
+        color = color - lighting2; 
+        // If the object that was intersected by is a transparent object
+        if (sceneObjects[shadowRay.index]->isTransparent() || sceneObjects[shadowRay.index]->isRefractive()) {
+            transparentOrRefractive = true;
+            if (sceneObjects[shadowRay.index]->isTransparent()) {
+                color += sceneObjects[shadowRay.index]->getColor() * 0.05f;
+            }
+        } 
+    }
+
     if (shadowRay2.index > -1 && shadowRay2.dist < lightDist2) {
+        color = color - lighting;  
         // If the object that was intersected by is a transparent object
         if (sceneObjects[shadowRay2.index]->isTransparent() || sceneObjects[shadowRay2.index]->isRefractive()) {
-            color = color - lighting + obj->getColor() * transparentRefractiveAmbientTerm;
+            transparentOrRefractive = true;
+            if (sceneObjects[shadowRay2.index]->isTransparent()) {
+                color += sceneObjects[shadowRay2.index]->getColor() * 0.05f;
+            }
         }
-        else {
-            color = color - lighting + obj->getColor() * ambientTerm;    //0.2 = ambient scale factor
-        }
+    }
 
+    if (transparentOrRefractive) {
+        color = color + transparentRefractiveAmbientTerm * obj->getColor();
+        
+    }
+    else {
+        color = color + ambientTerm * obj->getColor();
     }
     
     if (obj->isReflective() && step < MAX_STEPS) {
@@ -181,7 +180,7 @@ glm::vec3 trace(Ray ray, int step)
 
     //Fog calculation
 
-    float z1 = -100;
+    float z1 = -40;
     float z2 = -200;
 
     if (ray.hit.z < z1) {
@@ -191,6 +190,13 @@ glm::vec3 trace(Ray ray, int step)
     }
 
 	return color;
+}
+
+glm::vec3 noAA(float xp, float yp, float cellX, float cellY, glm::vec3 eye) {
+    glm::vec3 dir(xp+0.5*cellX, yp+0.5*cellY, -EDIST);	//direction of the primary ray
+    Ray ray = Ray(eye, dir);
+    glm::vec3 col = trace (ray, 1); //Trace the primary ray and get the colour value
+    return col;
 }
 
 glm::vec3 superSampling(float xp, float yp, float cellX, float cellY, glm::vec3 eye) {
@@ -232,12 +238,6 @@ void display()
 		{
 			yp = YMIN + j*cellY;
           
-		    //glm::vec3 dir(xp+0.5*cellX, yp+0.5*cellY, -EDIST);	//direction of the primary ray
-
-		    //Ray ray = Ray(eye, dir);
-
-		    //glm::vec3 col = trace (ray, 1); //Trace the primary ray and get the colour value
-
             glm::vec3 col = superSampling(xp, yp, cellX, cellY, eye);
 
 			glColor3f(col.r, col.g, col.b);
@@ -316,43 +316,61 @@ void initialize()
     plane->setSpecularity(false);
     sceneObjects.push_back(plane);
 
-	Sphere *sphere1 = new Sphere(glm::vec3(-5.0, 0.0, -140.0), 15.0);
-    sphere1->setReflectivity(true, 0.8);
-	sphere1->setColor(glm::vec3(0, 0, 1));   //Set colour to blue
+    // Big ball at the back
+	Sphere *sphere1 = new Sphere(glm::vec3(-9.0, 0.0, -120.0), 15.0);
+    sphere1->setReflectivity(true, 0.9);
+	sphere1->setColor(glm::vec3(0, 0, 1));   
 	sceneObjects.push_back(sphere1);		 //Add sphere to scene objects
     
-    Sphere *sphere2 = new Sphere(glm::vec3(12.0, 5.0, -70.0), 4.0);
+    // Earth
+    Sphere *sphere2 = new Sphere(glm::vec3(-10.0, -10.0, -68.0), 3.0);
     sceneObjects.push_back(sphere2);        //Add sphere to scene objects
 
-    Sphere *sphere3 = new Sphere(glm::vec3(14.0, -12.0, -70.0), 3.0);
+    // Refractive sphere
+    Sphere *sphere3 = new Sphere(glm::vec3(0, -10.0, -68.0), 3.0);
     sphere3->setColor(glm::vec3(0, 0, 0)); 
-    sphere3->setRefractivity(true, 1, 1.5);
+    sphere3->setRefractivity(true, 1, 1.01);
+    sphere3->setReflectivity(true, 0.1);
     sceneObjects.push_back(sphere3);
     
-    Sphere *sphere4 = new Sphere(glm::vec3(5.0, -12.0, -70.0), 3.0);
-    sphere4->setColor(glm::vec3(0.2, 0.2, 0.2));  //Set colour to something near black
+    // Hollow sphere
+    Sphere *sphere4 = new Sphere(glm::vec3(10.0, -10.0, -68.0), 3.0);
+    sphere4->setColor(glm::vec3(0, 0, 1));  
     sphere4->setTransparency(true, 0.5);
     sphere4->setReflectivity(true, 0.1);
     sceneObjects.push_back(sphere4);
     
 
 
-    Cylinder* cylinder1 = new Cylinder(glm::vec3(-5, -15, -70), 4, 6);
+    Cylinder* cylinder1 = new Cylinder(glm::vec3(-10, -15, -68), 3, 2);
     cylinder1->setColor(glm::vec3(0.5, 0.5, 0));
-    cylinder1->setReflectivity(true, 0.8);
     cylinder1->setCap(true);
     sceneObjects.push_back(cylinder1);
 
-    Cone* cone1 = new Cone(glm::vec3(13, -15, -100), 4, 10);
-    cone1->setColor(glm::vec3(1, 0, 1));
-    cone1->setReflectivity(true, 0.8);
+    Cylinder* cylinder2 = new Cylinder(glm::vec3(0, -15, -68), 3, 2);
+    cylinder2->setColor(glm::vec3(0.5, 0.5, 0));
+    cylinder2->setCap(true);
+    sceneObjects.push_back(cylinder2);
+
+    Cylinder* cylinder3 = new Cylinder(glm::vec3(10, -15, -68), 3, 2);
+    cylinder3->setColor(glm::vec3(0.5, 0.5, 0));
+    cylinder3->setCap(true);
+    sceneObjects.push_back(cylinder3);
+
+    Cylinder* cylinder4 = new Cylinder(glm::vec3(19, -15, -124), 4, 20);
+    cylinder4->setColor(glm::vec3(0.5, 0, 0.5));
+    cylinder4->setCap(true);
+    sceneObjects.push_back(cylinder4);
+
+    Cone* cone1 = new Cone(glm::vec3(7, -15, -95), 5, 15);
+    cone1->setColor(glm::vec3(1, 0, 0));
     sceneObjects.push_back(cone1);
 
-    drawCube(glm::vec3(-13, -12.0, -90.0), glm::vec3(6.0), glm::vec3(0, 0.5, 1));
+    drawCube(glm::vec3(16, -12.5, -85.0), glm::vec3(5.0), glm::vec3(0, 1, 0));
 
     
     
-    texture = TextureBMP("earthcloudmap.bmp");
+    texture = TextureBMP("earthmap1k.bmp");
 }
 
 

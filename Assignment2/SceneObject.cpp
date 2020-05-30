@@ -16,7 +16,6 @@ glm::vec3 SceneObject::getColor()
 
 glm::vec3 SceneObject::lighting(glm::vec3 lightPos, glm::vec3 viewVec, glm::vec3 hit)
 {
-	float ambientTerm = 0.2;
 	float diffuseTerm = 0;
 	float specularTerm = 0;
 	glm::vec3 normalVec = normal(hit);
@@ -29,7 +28,7 @@ glm::vec3 SceneObject::lighting(glm::vec3 lightPos, glm::vec3 viewVec, glm::vec3
 		float rDotv = glm::dot(reflVec, viewVec);
 		if (rDotv > 0) specularTerm = pow(rDotv, shin_);
 	}
-	glm::vec3 colorSum = ambientTerm * color_ + lDotn * color_ + specularTerm * glm::vec3(1);
+	glm::vec3 colorSum = lDotn * color_ + specularTerm * glm::vec3(1);
 	return colorSum;
 }
 

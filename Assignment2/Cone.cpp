@@ -14,9 +14,6 @@
 */
 float Cone::intersect(glm::vec3 p0, glm::vec3 dir)
 {
-
-
-
     glm::vec3 vdif = p0 - center; 
     
     float rhRatio = radius / height;
@@ -34,27 +31,39 @@ float Cone::intersect(glm::vec3 p0, glm::vec3 dir)
 
     if (fabs(t1) < 0.001)
     {
-        t1 = -1.0;
+        if (t2 > 0) return t2;
+        else t1 = -1.0;
     }
     if (fabs(t2) < 0.001) t2 = -1.0;
 
-    glm::vec3 pt1 = p0 + t1 * dir;
-    if (pt1.y > (center.y + height)) {
-        glm::vec3 pt2 = p0 + t2 * dir;
-        if (pt2.y > (center.y + height)) {
-            return -1;
-        }
-        else {
-            return t2;
-        }
+    float tA; // closer point
+    float tB; 
+
+    if (t1 > t2) {
+        tB = t1;
+        tA = t2;
+    }
+    else {
+        tB = t2;
+        tA = t1;
     }
 
-    return (t1 < t2) ? t1 : t2;
+    glm::vec3 ptA = p0 + tA * dir;
+    glm::vec3 ptB = p0 + tB * dir;
+    if ((ptA.y >= (center.y) && ptA.y <= (center.y + height))) {
+        return tA;
+    }
+    else if ((ptB.y >= center.y && ptB.y <= (height + center.y))) {
+        return tB;
+    }
+    else {
+        return -1;
+    }
 }
 
 /**
 * Returns the unit normal vector at a given point.
-* Assumption: The input point p lies on the cylinder.
+* Assumption: The input point p lies on the cone.
 */
 glm::vec3 Cone::normal(glm::vec3 p)
 {   
@@ -64,5 +73,6 @@ glm::vec3 Cone::normal(glm::vec3 p)
     float y = sin(theta);
     float z = cos(alpha) * cos(theta);
     glm::vec3 n = glm::vec3(x, y, z);
+    n = glm::normalize(n);
     return n;
 }

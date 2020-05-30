@@ -140,8 +140,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Image Include="Butterfly.bmp" />
-    <Image Include="earthcloudmap.bmp" />
+    <Image Include="earthmap1k.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cone.cpp" />
