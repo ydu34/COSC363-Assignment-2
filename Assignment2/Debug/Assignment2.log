@@ -1,5 +1,1 @@
-﻿  Cone.cpp
-D:\UC\COSC363\Assignment2\Assignment2\SceneObject.h(26,20): warning C4305: 'initializing': truncation from 'double' to 'float'
-D:\UC\COSC363\Assignment2\Assignment2\SceneObject.h(27,20): warning C4305: 'initializing': truncation from 'double' to 'float'
-D:\UC\COSC363\Assignment2\Assignment2\SceneObject.h(28,20): warning C4305: 'initializing': truncation from 'double' to 'float'
-  Assignment2.vcxproj -> D:\UC\COSC363\Assignment2\Debug\Assignment2.exe
+﻿  Assignment2.vcxproj -> D:\UC\COSC363\Assignment2\Debug\Assignment2.exe

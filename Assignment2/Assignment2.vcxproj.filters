@@ -68,9 +68,4 @@
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="RayTracer">
-      <Filter>Source Files</Filter>
-    </None>
-  </ItemGroup>
 </Project>
